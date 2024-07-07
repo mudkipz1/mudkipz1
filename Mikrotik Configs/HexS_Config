@@ -1,0 +1,92 @@
+# Configuration I created
+# Purpose is to be quickly loaded on a Mikrotik HeXS router
+# The device would be bridged within a local subnet RFC 1918 for private addresses
+# There are rules technically set up for WAN Access, but this is redacted for privacy. 
+# DMZ-like setting present to access uplink device
+
+:delay 15s
+system reset-configuration no-defaults=yes
+:delay 120s
+/interface bridge
+add comment="SUBNET: 192-168-100-NET/24" name=bridge1
+/interface ethernet
+set [ find default-name=ether1 ] name="01 - WAN" rx-flow-control=auto tx-flow-control=auto
+set [ find default-name=ether2 ] name="02 - CST DEVICE" rx-flow-control=auto tx-flow-control=auto
+set [ find default-name=ether3 ] name="03 - EMPTY" rx-flow-control=auto tx-flow-control=auto
+set [ find default-name=ether4 ] name="04 - EMPTY" rx-flow-control=auto tx-flow-control=auto
+set [ find default-name=ether5 ] name="05 - EMPTY" rx-flow-control=auto tx-flow-control=auto
+reset-mac-address 0,1,2,3,4
+/interface list
+add include=all name=WAN
+add include=all name=LAN
+/interface wireless security-profiles
+set [ find default=yes ] supplicant-identity=MikroTik
+/ip hotspot profile
+set [ find default=yes ] html-directory=flash/hotspot
+/ip pool
+add name=DHCP_POOL-192-168-100-NET/24 ranges=192.168.100.65-192.168.100.239
+/ip dhcp-server
+add address-pool=DHCP_POOL-192-168-100-NET/24 disabled=no interface=bridge1 lease-time=20m name=DHCP-192-168-100-NET/24
+/interface bridge port
+add bridge=bridge1 interface="02 - CST DEVICE"
+add bridge=bridge1 interface="03 - EMPTY"
+add bridge=bridge1 interface="04 - EMPTY"
+add bridge=bridge1 interface="05 - EMPTY"
+/interface list member
+add interface="01 - WAN" list=WAN
+add interface="02 - CST DEVICE" list=LAN
+add interface="03 - EMPTY" list=LAN
+add interface="04 - EMPTY" list=LAN
+add interface="05 - EMPTY" list=LAN
+/ip address
+add address=192.168.100.1/24 interface=bridge1 network=192.168.100.0
+/ip dhcp-client
+add disabled=no interface="01 - WAN"
+/ip dhcp-server network
+add address=192.168.100.0/24 dns-server=1.1.1.1,8.8.8.8 gateway=192.168.100.1
+/ip dns
+set servers=1.1.1.1,8.8.8.8
+/ip firewall address-list
+# Redacted. sets a variable to a public address for well remote access #add address=/24 list="Public"
+add address=192.168.100.0/24 list="Local Access"
+add address=192.168.8.0/22 list="Secondary LAN"
+/ip firewall filter
+add action=accept chain=forward comment="Allow Valid Forward Connection States" connection-state=established,related,new
+add action=accept chain=input comment="Allow Valid Incoming Connection States" connection-state=established,related,new
+add action=drop chain=forward comment="DROP Invalid Forward Connection States" connection-state=invalid
+add action=drop chain=input comment="DROP Invalid Input Connection States" connection-state=invalid
+add action=accept chain=input in-interface-list=WAN src-address=#It was redacted
+add action=accept chain=input in-interface-list=LAN src-address=192.168.100.0/24
+/ip firewall nat
+add action=masquerade chain=srcnat
+add action=dst-nat chain=dstnat disabled=yes in-interface-list=WAN src-address=0.0.0.0 to-addresses=192.168.100.50
+/ip service
+set telnet disabled=yes
+set ftp disabled=yes
+set www disabled=yes
+set ssh address=192.168.100.0/24,192.168.8.0/22 port=22022
+set api disabled=yes
+set winbox address=192.168.100.0/24,192.168.8.0/22 port=9291
+set api-ssl disabled=yes
+/ip upnp
+set enabled=yes
+/ip upnp interfaces
+add interface="01 - WAN" type=external
+add interface="02 - CST DEVICE" type=internal
+add interface="03 - EMPTY" type=internal
+add interface="04 - EMPTY" type=internal
+add interface="05 - EMPTY" type=internal
+/system clock
+set time-zone-name=America/Los_Angeles
+/system identity
+set name="CPE MikroTik"
+/system ntp client
+set enabled=yes server-dns-names=0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org
+/system resource irq rps
+set "01 - WAN" disabled=no
+set "02 - CST DEVICE" disabled=no
+set "03 - EMPTY" disabled=no
+set "04 - EMPTY" disabled=no
+set "05 - EMPTY" disabled=no
+/user
+set admin password= #POPULATE BEFORE UPLOAD
