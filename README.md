@@ -8,4 +8,4 @@ Some things in here might be re-inventing the wheel but I find to be a good way 
 
 Some things are really old files from my CompSci class to chuck up here to show exposure to languages I don't really touch all that much anymore. 
 
-I'm always open to feedback, and I personally prefer heavily critical feedback. If my code is straight shit, tell me, but be constructive about it. I'm still new so "good practices" aren't second nature. 
+I'm always open to feedback, and I personally prefer heavily critical feedback. If my code is awful or a practice is present that should be heavily avoided, tell me, but be constructive about it. I'm still new so "good practices" aren't second nature.
